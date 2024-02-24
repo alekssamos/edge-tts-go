@@ -13,4 +13,4 @@ require (
 	golang.org/x/text v0.11.0
 )
 
-replace github.com/surfaceyu/edge-tts-go latest => github.com/alekssamos/edge-tts-go latest
+replace github.com/surfaceyu/edge-tts-go v0.1.0 => github.com/alekssamos/edge-tts-go v0.1.1
