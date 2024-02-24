@@ -24,6 +24,7 @@ type Args struct {
 	Proxy          string
 	Rate           string
 	Volume         string
+	Pitch    string
 	WordsInCue     float64
 	WriteMedia     string
 	WriteSubtitles string
@@ -82,7 +83,7 @@ func NewTTS(args Args) *EdgeTTS {
 			return nil
 		}
 	}
-	tts := NewCommunicate().WithVoice(args.Voice).WithRate(args.Rate).WithVolume(args.Volume)
+	tts := NewCommunicate().WithVoice(args.Voice).WithRate(args.Rate).WithVolume(args.Volume).WithPitch(args.Pitch)
 	file, err := os.OpenFile(args.WriteMedia, os.O_APPEND|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		log.Fatalf("Failed to open file: %v\n", err)
@@ -96,29 +97,30 @@ func NewTTS(args Args) *EdgeTTS {
 	}
 }
 
-func (eTTS *EdgeTTS) task(text string, voice string, rate string, volume string) *CommunicateTextTask {
+func (eTTS *EdgeTTS) task(text string, voice string, rate string, volume string, pitch string) *CommunicateTextTask {
 	return &CommunicateTextTask{
 		text: text,
 		option: CommunicateTextOption{
 			voice:  voice,
 			rate:   rate,
 			volume: volume,
+			pitch: pitch,
 		},
 	}
 }
 
 func (eTTS *EdgeTTS) AddTextDefault(text string) *EdgeTTS {
-	eTTS.texts = append(eTTS.texts, eTTS.task(text, "", "", ""))
+	eTTS.texts = append(eTTS.texts, eTTS.task(text, "", "", "", ""))
 	return eTTS
 }
 
 func (eTTS *EdgeTTS) AddTextWithVoice(text string, voice string) *EdgeTTS {
-	eTTS.texts = append(eTTS.texts, eTTS.task(text, voice, "", ""))
+	eTTS.texts = append(eTTS.texts, eTTS.task(text, voice, "", "", ""))
 	return eTTS
 }
 
-func (eTTS *EdgeTTS) AddText(text string, voice string, rate string, volume string) *EdgeTTS {
-	eTTS.texts = append(eTTS.texts, eTTS.task(text, voice, rate, volume))
+func (eTTS *EdgeTTS) AddText(text string, voice string, rate string, volume string, pitch string) *EdgeTTS {
+	eTTS.texts = append(eTTS.texts, eTTS.task(text, voice, rate, volume, pitch))
 	return eTTS
 }
 

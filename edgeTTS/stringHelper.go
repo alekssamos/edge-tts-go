@@ -71,9 +71,9 @@ func splitTextByByteLength(text interface{}, byteLength int) []string {
 	return result
 }
 
-func mkssml(text interface{}, voice string, rate string, volume string) string {
+func mkssml(text interface{}, voice string, rate string, volume string, pitch string) string {
 	textStr := bytesToString(text)
-	ssml := fmt.Sprintf("<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='en-US'><voice name='%s'><prosody pitch='+0Hz' rate='%s' volume='%s'>%s</prosody></voice></speak>", voice, rate, volume, textStr)
+	ssml := fmt.Sprintf("<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='en-US'><voice name='%s'><prosody pitch='%s' rate='%s' volume='%s'>%s</prosody></voice></speak>", voice, pitch, rate, volume, textStr)
 	return ssml
 }
 
@@ -104,9 +104,9 @@ func dateToString() string {
 	return time.Now().UTC().Format("Mon Jan 02 2006 15:04:05 GMT-0700 (Coordinated Universal Time)")
 }
 
-func calcMaxMsgSize(voice string, rate string, volume string) int {
+func calcMaxMsgSize(voice string, rate string, volume string, pitch string) int {
 	websocketMaxSize := int(math.Pow(2, 16))
-	overheadPerMessage := len(ssmlHeadersPlusData(uuidWithOutDashes(), dateToString(), mkssml("", voice, rate, volume))) + 50
+	overheadPerMessage := len(ssmlHeadersPlusData(uuidWithOutDashes(), dateToString(), mkssml("", voice, rate, volume, pitch))) + 50
 	return websocketMaxSize - overheadPerMessage
 }
 

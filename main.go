@@ -22,6 +22,7 @@ func main() {
 	file := pflag.StringP("file", "f", "", "same as --text but read from file")
 	voice := pflag.StringP("voice", "v", "zh-CN-XiaoxiaoNeural", "voice for TTS")
 	volume := pflag.String("volume", "+0%", "set TTS volume")
+	pitch := pflag.String("pitch", "+0Hz", "set TTS pitch")
 	rate := pflag.String("rate", "+0%", "set TTS rate")
 	writeMedia := pflag.String("write-media", "", "send media output to file instead of stdout")
 	// proxy := pflag.String("proxy", "", "use a proxy for TTS and voice list")
@@ -47,8 +48,9 @@ func main() {
 			Voice:      *voice,
 			Rate:       *rate,
 			Volume:     *volume,
+			Pitch:     *pitch,
 			WriteMedia: *writeMedia,
 		}
-		edgeTTS.NewTTS(args).AddText(args.Text, args.Voice, args.Rate, args.Volume).Speak()
+		edgeTTS.NewTTS(args).AddText(args.Text, args.Voice, args.Rate, args.Volume, args.Pitch).Speak()
 	}
 }

@@ -75,6 +75,7 @@ type CommunicateTextOption struct {
 	voice  string
 	rate   string
 	volume string
+	pitch string
 }
 
 type Communicate struct {
@@ -91,6 +92,7 @@ func NewCommunicate() *Communicate {
 			voice:  "Microsoft Server Speech Text to Speech Voice (zh-CN, XiaoxiaoNeural)",
 			rate:   "+0%",
 			volume: "+0%",
+			pitch: "+0Hz",
 		},
 		processorLimit: 16,
 		tasks:          make(chan *CommunicateTextTask, 16),
@@ -132,6 +134,14 @@ func (c *Communicate) WithVolume(volume string) *Communicate {
 		return c
 	}
 	c.option.volume = volume
+	return c
+}
+
+func (c *Communicate) WithPitch(pitch string) *Communicate {
+	if !isValidPitch(pitch) {
+		return c
+	}
+	c.option.pitch = pitch
 	return c
 }
 
@@ -184,7 +194,7 @@ func (c *Communicate) stream(text *CommunicateTextTask) chan communicateChunk {
 	c.fillOption(&text.option)
 	conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("X-Timestamp:%s\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n{\"context\":{\"synthesis\":{\"audio\":{\"metadataoptions\":{\"sentenceBoundaryEnabled\":false,\"wordBoundaryEnabled\":true},\"outputFormat\":\"audio-24khz-48kbitrate-mono-mp3\"}}}}\r\n", date)))
 	conn.WriteMessage(websocket.TextMessage, []byte(ssmlHeadersPlusData(uuidWithOutDashes(), date, mkssml(
-		text.text, text.option.voice, text.option.rate, text.option.volume,
+		text.text, text.option.voice, text.option.rate, text.option.volume, text.option.pitch,
 	))))
 
 	go func() {
@@ -314,4 +324,11 @@ func isValidVolume(volume string) bool {
 		return false
 	}
 	return regexp.MustCompile(`^[+-]\d+%$`).MatchString(volume)
+}
+
+func isValidPitch(pitch string) bool {
+	if pitch == "" {
+		return false
+	}
+	return regexp.MustCompile(`^[+-]\d+Hz$`).MatchString(pitch)
 }
