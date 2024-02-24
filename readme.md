@@ -6,7 +6,7 @@
 
 To install it, run the following command:
 
-    $ go install github.com/surfaceyu/edge-tts-go
+    $ go install github.com/alekssamos/edge-tts-go
 
 ## Usage
 
@@ -47,19 +47,21 @@ You must first check the available voices with the `--list-voices` option:
 
     $ edge-tts-go --voice zh-CN-XiaoxiaoNeural --text "秦时明月汉时关，万里长征人未还" --write-media hello_in_chinese.mp3
 
-### Changing rate and volume
+### Changing rate, volume and pitch
 
 It is possible to make minor changes to the generated speech.
 
     $ edge-tts-go --rate=-50% --text "Hello, world!" --write-media hello_with_rate_halved.mp3
     $ edge-tts-go --volume=-50% --text "Hello, world!" --write-media hello_with_volume_halved.mp3
+    $ edge-tts-go --pitch=+40Hz --text "Hello, world!" --write-media hello_with_pitch_hier.mp3
 
 ## go module
 
 It is possible to use the `edge-tts-go` module directly from go. For a list of example applications:
 
-* https://github.com/surfaceyu/edge-tts-go/edgeTTS
+* https://github.com/alekssamos/edge-tts-go/edgeTTS
 
 ## thanks
 
 * https://github.com/rany2/edge-tts
+* https://github.com/surfaceyu/edge-tts-go
