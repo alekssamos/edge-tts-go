@@ -1,6 +1,6 @@
-module github.com/surfaceyu/edge-tts-go
+module github.com/alekssamos/edge-tts-go
 
-go 1.20
+go 1.24
 
 require golang.org/x/crypto v0.11.0
 
@@ -12,5 +12,3 @@ require (
 	golang.org/x/term v0.10.0 // indirect
 	golang.org/x/text v0.11.0
 )
-
-replace github.com/surfaceyu/edge-tts-go v0.1.0 => github.com/alekssamos/edge-tts-go v0.1.1
