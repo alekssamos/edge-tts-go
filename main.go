@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/spf13/pflag"
-	"github.com/surfaceyu/edge-tts-go/edgeTTS"
+	"github.com/alekssamos/edge-tts-go/edgeTTS"
 )
 
 func usage() {
