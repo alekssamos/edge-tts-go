@@ -18,24 +18,23 @@ func uuidWithOutDashes() string {
 }
 
 /*
-func stringToBytes(text interface{}) []byte {
-	var textBytes []byte
-	switch v := text.(type) {
-	case string:
-		encoder := unicode.UTF8.NewEncoder()
-		encodedText, err := io.ReadAll(transform.NewReader(strings.NewReader(v), encoder))
-		if err != nil {
-			panic(fmt.Sprintf("Error encoding text: %s", err.Error()))
+	func stringToBytes(text interface{}) []byte {
+		var textBytes []byte
+		switch v := text.(type) {
+		case string:
+			encoder := unicode.UTF8.NewEncoder()
+			encodedText, err := io.ReadAll(transform.NewReader(strings.NewReader(v), encoder))
+			if err != nil {
+				panic(fmt.Sprintf("Error encoding text: %s", err.Error()))
+			}
+			textBytes = encodedText
+		case []byte:
+			textBytes = v
+		default:
+			panic("str must be string or []byte")
 		}
-		textBytes = encodedText
-	case []byte:
-		textBytes = v
-	default:
-		panic("str must be string or []byte")
+		return textBytes
 	}
-	return textBytes
-}
-
 */
 func bytesToString(text interface{}) string {
 	var testBytes string
@@ -111,11 +110,11 @@ func dateToString() string {
 }
 
 /*
-func calcMaxMsgSize(voice string, rate string, volume string, pitch string) int {
-	websocketMaxSize := int(math.Pow(2, 16))
-	overheadPerMessage := len(ssmlHeadersPlusData(uuidWithOutDashes(), dateToString(), mkssml("", voice, rate, volume, pitch))) + 50
-	return websocketMaxSize - overheadPerMessage
-}
+	func calcMaxMsgSize(voice string, rate string, volume string, pitch string) int {
+		websocketMaxSize := int(math.Pow(2, 16))
+		overheadPerMessage := len(ssmlHeadersPlusData(uuidWithOutDashes(), dateToString(), mkssml("", voice, rate, volume, pitch))) + 50
+		return websocketMaxSize - overheadPerMessage
+	}
 */
 func getHeadersAndData(data interface{}) (map[string]string, []byte, error) {
 	var dataBytes []byte

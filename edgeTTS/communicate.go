@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -74,7 +75,7 @@ type CommunicateTextOption struct {
 	voice  string
 	rate   string
 	volume string
-	pitch string
+	pitch  string
 }
 
 type Communicate struct {
@@ -83,7 +84,7 @@ type Communicate struct {
 
 	processorLimit int
 	tasks          chan *CommunicateTextTask
-	lastError error
+	lastError      error
 }
 
 func NewCommunicate() *Communicate {
@@ -92,18 +93,22 @@ func NewCommunicate() *Communicate {
 			voice:  "Microsoft Server Speech Text to Speech Voice (zh-CN, XiaoxiaoNeural)",
 			rate:   "+0%",
 			volume: "+0%",
-			pitch: "+0Hz",
+			pitch:  "+0Hz",
 		},
 		processorLimit: 2,
 		tasks:          make(chan *CommunicateTextTask, 2),
-		lastError: nil,
+		lastError:      nil,
 	}
 }
 
 func (c *Communicate) logError(err error) error {
-	if err == nil { return nil }
+	if err == nil {
+		return nil
+	}
 	c.lastError = err
-	if err.Error() != "EOF" { return nil }
+	if err.Error() != "EOF" {
+		return nil
+	}
 	return err
 }
 
@@ -306,7 +311,8 @@ func (c *Communicate) process(wg *sync.WaitGroup) {
 			if c.lastError != nil {
 				break
 			}
-			v, ok := <-chunk
+			select {
+			case v, ok := <-chunk:
 			if ok {
 				if v.Type == ChunkTypeAudio {
 					t.speechData = append(t.speechData, v.Data...)
@@ -315,6 +321,9 @@ func (c *Communicate) process(wg *sync.WaitGroup) {
 					close(t.chunk)
 					break
 				}
+			}
+			case <- time.After(2*time.Second):
+			break
 			}
 		}
 	}

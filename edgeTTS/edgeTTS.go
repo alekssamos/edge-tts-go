@@ -24,7 +24,7 @@ type Args struct {
 	Proxy          string
 	Rate           string
 	Volume         string
-	Pitch    string
+	Pitch          string
 	WordsInCue     float64
 	WriteMedia     string
 	WriteSubtitles string
@@ -104,7 +104,7 @@ func (eTTS *EdgeTTS) task(text string, voice string, rate string, volume string,
 			voice:  voice,
 			rate:   rate,
 			volume: volume,
-			pitch: pitch,
+			pitch:  pitch,
 		},
 	}
 }
