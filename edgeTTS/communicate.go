@@ -106,7 +106,7 @@ func (c *Communicate) logError(err error) error {
 	if err == nil {
 		return nil
 	}
-	fmt.Printf("! catched error: %s\n", err.Error())
+	// fmt.Printf("! catched error: %s\n", err.Error())
 	c.lastError = err
 	if err.Error() != "EOF" {
 		return nil
@@ -304,7 +304,7 @@ func (c *Communicate) stream(text *CommunicateTextTask) chan communicateChunk {
 			}
 		}
 		if !audioWasReceived {
-			return c.logError(fmt.Errorf("no audio was received"))
+			return c.logError(AudioWasReceivedError)
 		}
 		return nil
 	}()

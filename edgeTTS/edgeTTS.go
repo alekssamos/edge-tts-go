@@ -124,7 +124,7 @@ func (eTTS *EdgeTTS) AddText(text string, voice string, rate string, volume stri
 	return eTTS
 }
 
-func (eTTS *EdgeTTS) Speak() {
+func (eTTS *EdgeTTS) Speak() error {
 	defer eTTS.communicator.close()
 	defer eTTS.outCome.Close()
 
@@ -133,4 +133,8 @@ func (eTTS *EdgeTTS) Speak() {
 	for _, text := range eTTS.texts {
 		eTTS.outCome.Write(text.speechData)
 	}
+	if eTTS.communicator.lastError == AudioWasReceivedError {
+		log.Fatalln(eTTS.communicator.lastError.Error())
+	}
+	return eTTS.communicator.lastError
 }
