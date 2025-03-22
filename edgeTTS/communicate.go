@@ -237,6 +237,7 @@ func (c *Communicate) stream(text *CommunicateTextTask) chan communicateChunk {
 			if err != nil {
 				return c.logError(err)
 			}
+			conn.SetReadDeadline(time.Now().Add(time.Millisecond * 700))
 			switch messageType {
 			case websocket.TextMessage:
 				parameters, data, _ := getHeadersAndData(data)
