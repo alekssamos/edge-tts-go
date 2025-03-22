@@ -3,11 +3,10 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 
-	"github.com/spf13/pflag"
 	"github.com/alekssamos/edge-tts-go/edgeTTS"
+	"github.com/spf13/pflag"
 )
 
 func usage() {
@@ -38,7 +37,7 @@ func main() {
 			reader := bufio.NewReader(os.Stdin)
 			*text, _ = reader.ReadString('\n')
 		} else {
-			data, _ := ioutil.ReadFile(*file)
+			data, _ := os.ReadFile(*file)
 			*text = string(data)
 		}
 	}
@@ -48,7 +47,7 @@ func main() {
 			Voice:      *voice,
 			Rate:       *rate,
 			Volume:     *volume,
-			Pitch:     *pitch,
+			Pitch:      *pitch,
 			WriteMedia: *writeMedia,
 		}
 		edgeTTS.NewTTS(args).AddText(args.Text, args.Voice, args.Rate, args.Volume, args.Pitch).Speak()

@@ -3,26 +3,27 @@ package edgeTTS
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
-	"math"
+	// "io"
+	// "math"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
-	"golang.org/x/text/encoding/unicode"
-	"golang.org/x/text/transform"
+	// "golang.org/x/text/encoding/unicode"
+	// "golang.org/x/text/transform"
 )
 
 func uuidWithOutDashes() string {
 	return strings.ReplaceAll(uuid.New().String(), "-", "")
 }
 
+/*
 func stringToBytes(text interface{}) []byte {
 	var textBytes []byte
 	switch v := text.(type) {
 	case string:
 		encoder := unicode.UTF8.NewEncoder()
-		encodedText, err := ioutil.ReadAll(transform.NewReader(strings.NewReader(v), encoder))
+		encodedText, err := io.ReadAll(transform.NewReader(strings.NewReader(v), encoder))
 		if err != nil {
 			panic(fmt.Sprintf("Error encoding text: %s", err.Error()))
 		}
@@ -35,6 +36,7 @@ func stringToBytes(text interface{}) []byte {
 	return textBytes
 }
 
+*/
 func bytesToString(text interface{}) string {
 	var testBytes string
 	switch v := text.(type) {
@@ -48,6 +50,7 @@ func bytesToString(text interface{}) string {
 	return testBytes
 }
 
+/*
 func splitTextByByteLength(text interface{}, byteLength int) []string {
 	// 将字符串转换为字节数组
 	textBytes := stringToBytes(text)
@@ -70,6 +73,7 @@ func splitTextByByteLength(text interface{}, byteLength int) []string {
 	}
 	return result
 }
+*/
 
 func mkssml(text interface{}, voice string, rate string, volume string, pitch string) string {
 	textStr := bytesToString(text)
@@ -87,6 +91,7 @@ func ssmlHeadersPlusData(requestID string, timestamp string, ssml string) string
 		requestID, timestamp, ssml)
 }
 
+/*
 func removeIncompatibleCharacters(text interface{}) string {
 	cleanedStr := bytesToString(text)
 	runes := []rune(cleanedStr)
@@ -99,17 +104,19 @@ func removeIncompatibleCharacters(text interface{}) string {
 
 	return string(runes)
 }
+*/
 
 func dateToString() string {
 	return time.Now().UTC().Format("Mon Jan 02 2006 15:04:05 GMT-0700 (Coordinated Universal Time)")
 }
 
+/*
 func calcMaxMsgSize(voice string, rate string, volume string, pitch string) int {
 	websocketMaxSize := int(math.Pow(2, 16))
 	overheadPerMessage := len(ssmlHeadersPlusData(uuidWithOutDashes(), dateToString(), mkssml("", voice, rate, volume, pitch))) + 50
 	return websocketMaxSize - overheadPerMessage
 }
-
+*/
 func getHeadersAndData(data interface{}) (map[string]string, []byte, error) {
 	var dataBytes []byte
 	switch v := data.(type) {

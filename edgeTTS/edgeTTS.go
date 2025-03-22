@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"sort"
 
-	"golang.org/x/crypto/ssh/terminal"
+	terminal "golang.org/x/term"
 )
 
 type EdgeTTS struct {

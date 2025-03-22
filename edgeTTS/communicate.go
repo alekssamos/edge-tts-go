@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -84,6 +83,7 @@ type Communicate struct {
 
 	processorLimit int
 	tasks          chan *CommunicateTextTask
+	lastError error
 }
 
 func NewCommunicate() *Communicate {
@@ -94,9 +94,17 @@ func NewCommunicate() *Communicate {
 			volume: "+0%",
 			pitch: "+0Hz",
 		},
-		processorLimit: 16,
-		tasks:          make(chan *CommunicateTextTask, 16),
+		processorLimit: 2,
+		tasks:          make(chan *CommunicateTextTask, 2),
+		lastError: nil,
 	}
+}
+
+func (c *Communicate) logError(err error) error {
+	if err == nil { return nil }
+	c.lastError = err
+	if err.Error() != "EOF" { return nil }
+	return err
 }
 
 func (c *Communicate) WithVoice(voice string) *Communicate {
@@ -177,7 +185,7 @@ func (c *Communicate) openWs() *websocket.Conn {
 	dialer := websocket.Dialer{}
 	conn, _, err := dialer.Dial(fmt.Sprintf("%s&ConnectionId=%s", WSS_URL, uuidWithOutDashes()), headers)
 	if err != nil {
-		log.Fatal("dial:", err)
+		c.logError(fmt.Errorf("dial: %w", err))
 	}
 	return conn
 }
@@ -192,12 +200,20 @@ func (c *Communicate) stream(text *CommunicateTextTask) chan communicateChunk {
 	conn := c.openWs()
 	date := dateToString()
 	c.fillOption(&text.option)
-	conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("X-Timestamp:%s\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n{\"context\":{\"synthesis\":{\"audio\":{\"metadataoptions\":{\"sentenceBoundaryEnabled\":false,\"wordBoundaryEnabled\":true},\"outputFormat\":\"audio-24khz-48kbitrate-mono-mp3\"}}}}\r\n", date)))
-	conn.WriteMessage(websocket.TextMessage, []byte(ssmlHeadersPlusData(uuidWithOutDashes(), date, mkssml(
+	c.logError(conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("X-Timestamp:%s\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n{\"context\":{\"synthesis\":{\"audio\":{\"metadataoptions\":{\"sentenceBoundaryEnabled\":false,\"wordBoundaryEnabled\":true},\"outputFormat\":\"audio-24khz-48kbitrate-mono-mp3\"}}}}\r\n", date))))
+	if c.lastError != nil {
+		close(text.chunk)
+		return text.chunk
+	}
+	c.logError(conn.WriteMessage(websocket.TextMessage, []byte(ssmlHeadersPlusData(uuidWithOutDashes(), date, mkssml(
 		text.text, text.option.voice, text.option.rate, text.option.volume, text.option.pitch,
-	))))
+	)))))
+	if c.lastError != nil {
+		close(text.chunk)
+		return text.chunk
+	}
 
-	go func() {
+	go func() error {
 		// download indicates whether we should be expecting audio data,
 		// this is so what we avoid getting binary data from the websocket
 		// and falsely thinking it's audio data.
@@ -213,52 +229,53 @@ func (c *Communicate) stream(text *CommunicateTextTask) chan communicateChunk {
 			// 读取消息
 			messageType, data, err := conn.ReadMessage()
 			if err != nil {
-				log.Println(err)
-				return
+				return c.logError(err)
 			}
 			switch messageType {
 			case websocket.TextMessage:
 				parameters, data, _ := getHeadersAndData(data)
 				path := parameters["Path"]
-				if path == "turn.start" {
+				switch path {
+				case "turn.start":
 					downloadAudio = true
-				} else if path == "turn.end" {
+				case "turn.end":
 					downloadAudio = false
 					text.chunk <- communicateChunk{
 						Type: ChunkTypeEnd,
 					}
-				} else if path == "audio.metadata" {
+				case "audio.metadata":
 					meta := &turnMeta{}
 					if err := json.Unmarshal(data, meta); err != nil {
-						log.Fatalf("We received a text message, but unmarshal failed.")
+						return c.logError(fmt.Errorf("We received a text message, but unmarshal failed. %w", err))
 					}
 					for _, v := range meta.Metadata {
-						if v.Type == ChunkTypeWordBoundary {
+						switch v.Type {
+						case ChunkTypeWordBoundary:
 							text.chunk <- communicateChunk{
 								Type:     v.Type,
 								Offset:   v.Data.Offset,
 								Duration: v.Data.Duration,
 								Text:     v.Data.Text.Text,
 							}
-						} else if v.Type == ChunkTypeSessionEnd {
+						case ChunkTypeSessionEnd:
 							continue
-						} else {
-							log.Fatalf("Unknown metadata type: %s", v.Type)
+						default:
+							return c.logError(fmt.Errorf("Unknown metadata type: %s", v.Type))
 						}
 					}
-				} else if path != "response" {
-					log.Fatalf("The response from the service is not recognized.\n%s", data)
+				default:
+					return c.logError(fmt.Errorf("The response from the service is not recognized.\n%s", data))
 				}
 			case websocket.BinaryMessage:
 				if !downloadAudio {
-					log.Fatalf("We received a binary message, but we are not expecting one.")
+					return c.logError(fmt.Errorf("We received a binary message, but we are not expecting one."))
 				}
 				if len(data) < 2 {
-					log.Fatalf("We received a binary message, but it is missing the header length.")
+					return c.logError(fmt.Errorf("We received a binary message, but it is missing the header length."))
 				}
 				headerLength := int(binary.BigEndian.Uint16(data[:2]))
 				if len(data) < headerLength+2 {
-					log.Fatalf("We received a binary message, but it is missing the audio data.")
+					return c.logError(fmt.Errorf("We received a binary message, but it is missing the audio data."))
 				}
 				text.chunk <- communicateChunk{
 					Type: ChunkTypeAudio,
@@ -267,6 +284,7 @@ func (c *Communicate) stream(text *CommunicateTextTask) chan communicateChunk {
 				// audioWasReceived = true
 			}
 		}
+		// return nil
 	}()
 
 	return text.chunk
@@ -285,6 +303,9 @@ func (c *Communicate) process(wg *sync.WaitGroup) {
 	for t := range c.tasks {
 		chunk := c.stream(t)
 		for {
+			if c.lastError != nil {
+				break
+			}
 			v, ok := <-chunk
 			if ok {
 				if v.Type == ChunkTypeAudio {

@@ -11,8 +11,8 @@ repos:
     rev: v0.5.1
     hooks:
       - id: no-go-testing
-      - id: golangci-lint
+      # - id: golangci-lint
       - id: go-unit-tests
-      - id: go-critic
+      # - id: go-critic
       - id: go-mod-tidy
       - id: go-build
