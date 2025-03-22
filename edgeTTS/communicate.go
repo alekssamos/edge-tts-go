@@ -208,18 +208,18 @@ func (c *Communicate) stream(text *CommunicateTextTask) chan communicateChunk {
 	c.fillOption(&text.option)
 	c.logError(conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("X-Timestamp:%s\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n{\"context\":{\"synthesis\":{\"audio\":{\"metadataoptions\":{\"sentenceBoundaryEnabled\":false,\"wordBoundaryEnabled\":true},\"outputFormat\":\"audio-24khz-48kbitrate-mono-mp3\"}}}}\r\n", date))))
 	if c.lastError != nil {
-		close(text.chunk)
+		// close(text.chunk)
 		return text.chunk
 	}
 	c.logError(conn.WriteMessage(websocket.TextMessage, []byte(ssmlHeadersPlusData(uuidWithOutDashes(), date, mkssml(
 		text.text, text.option.voice, text.option.rate, text.option.volume, text.option.pitch,
 	)))))
 	if c.lastError != nil {
-		close(text.chunk)
+		// close(text.chunk)
 		return text.chunk
 	}
 
-	go func() error {
+	go func() interface{} {
 		// download indicates whether we should be expecting audio data,
 		// this is so what we avoid getting binary data from the websocket
 		// and falsely thinking it's audio data.
@@ -228,7 +228,7 @@ func (c *Communicate) stream(text *CommunicateTextTask) chan communicateChunk {
 		// audio_was_received indicates whether we have received audio data
 		// from the websocket. This is so we can raise an exception if we
 		// don't receive any audio data.
-		// audioWasReceived := false
+		audioWasReceived := false
 
 		// finalUtterance := make(map[int]int)
 		for {
@@ -269,8 +269,13 @@ func (c *Communicate) stream(text *CommunicateTextTask) chan communicateChunk {
 							return c.logError(fmt.Errorf("Unknown metadata type: %s", v.Type))
 						}
 					}
+				case "response":
+					response := &turnResp{}
+					if err := json.Unmarshal(data, response); err != nil {
+						return c.logError(fmt.Errorf("We received a text message, but unmarshal failed. %w", err))
+					}
 				default:
-					return c.logError(fmt.Errorf("The response from the service is not recognized.\n%s", data))
+					return c.logError(fmt.Errorf("The response from the service is not recognized.\npath:%s\n%s", path, data))
 				}
 			case websocket.BinaryMessage:
 				if !downloadAudio {
@@ -287,12 +292,18 @@ func (c *Communicate) stream(text *CommunicateTextTask) chan communicateChunk {
 					Type: ChunkTypeAudio,
 					Data: data[headerLength+2:],
 				}
-				// audioWasReceived = true
+				audioWasReceived = true
 			}
 		}
-		// return nil
+		if !audioWasReceived {
+			return c.logError(fmt.Errorf("no audio was received"))
+		}
+		return nil
 	}()
 
+	if c.lastError != nil {
+		close(text.chunk)
+	}
 	return text.chunk
 }
 
@@ -310,7 +321,6 @@ func (c *Communicate) process(wg *sync.WaitGroup) {
 		chunk := c.stream(t)
 		for {
 			if c.lastError != nil {
-				close(t.chunk)
 				break
 			}
 			select {
