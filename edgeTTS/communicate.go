@@ -237,6 +237,7 @@ func (c *Communicate) stream(text *CommunicateTextTask) chan communicateChunk {
 			if err != nil {
 				if strings.HasSuffix(err.Error(), "timeout") {
 					conn.Close()
+					close(text.chunk)
 					return nil
 				}
 				return c.logError(err)
