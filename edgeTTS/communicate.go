@@ -85,6 +85,7 @@ type Communicate struct {
 	processorLimit int
 	tasks          chan *CommunicateTextTask
 	lastError      error
+	conn           *websocket.Conn
 }
 
 func NewCommunicate() *Communicate {
@@ -180,6 +181,7 @@ func (c *Communicate) fillOption(text *CommunicateTextOption) {
 }
 
 func (c *Communicate) openWs() *websocket.Conn {
+	var err error
 	headers := http.Header{}
 	headers.Add("Pragma", "no-cache")
 	headers.Add("Cache-Control", "no-cache")
@@ -189,29 +191,29 @@ func (c *Communicate) openWs() *websocket.Conn {
 	headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36 Edg/91.0.864.41")
 
 	dialer := websocket.Dialer{}
-	conn, _, err := dialer.Dial(fmt.Sprintf("%s&ConnectionId=%s", WSS_URL, uuidWithOutDashes()), headers)
+	c.conn, _, err = dialer.Dial(fmt.Sprintf("%s&ConnectionId=%s", WSS_URL, uuidWithOutDashes()), headers)
 	if err != nil {
 		c.logError(fmt.Errorf("dial: %w", err))
 	}
-	return conn
+	return c.conn
 }
 
 func (c *Communicate) close() {
-
+	c.conn.Close()
 }
 
 func (c *Communicate) stream(text *CommunicateTextTask) chan communicateChunk {
 	text.chunk = make(chan communicateChunk)
 	// texts := splitTextByByteLength(removeIncompatibleCharacters(c.text), calcMaxMsgSize(c.voice, c.rate, c.volume))
-	conn := c.openWs()
+	c.conn = c.openWs()
 	date := dateToString()
 	c.fillOption(&text.option)
-	c.logError(conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("X-Timestamp:%s\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n{\"context\":{\"synthesis\":{\"audio\":{\"metadataoptions\":{\"sentenceBoundaryEnabled\":false,\"wordBoundaryEnabled\":true},\"outputFormat\":\"audio-24khz-48kbitrate-mono-mp3\"}}}}\r\n", date))))
+	c.logError(c.conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("X-Timestamp:%s\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n{\"context\":{\"synthesis\":{\"audio\":{\"metadataoptions\":{\"sentenceBoundaryEnabled\":false,\"wordBoundaryEnabled\":true},\"outputFormat\":\"audio-24khz-48kbitrate-mono-mp3\"}}}}\r\n", date))))
 	if c.lastError != nil {
 		// close(text.chunk)
 		return text.chunk
 	}
-	c.logError(conn.WriteMessage(websocket.TextMessage, []byte(ssmlHeadersPlusData(uuidWithOutDashes(), date, mkssml(
+	c.logError(c.conn.WriteMessage(websocket.TextMessage, []byte(ssmlHeadersPlusData(uuidWithOutDashes(), date, mkssml(
 		text.text, text.option.voice, text.option.rate, text.option.volume, text.option.pitch,
 	)))))
 	if c.lastError != nil {
@@ -232,17 +234,17 @@ func (c *Communicate) stream(text *CommunicateTextTask) chan communicateChunk {
 
 		// finalUtterance := make(map[int]int)
 		for {
-			conn.SetReadDeadline(time.Now().Add(time.Second))
-			messageType, data, err := conn.ReadMessage()
+			c.conn.SetReadDeadline(time.Now().Add(time.Second))
+			messageType, data, err := c.conn.ReadMessage()
 			if err != nil {
 				if strings.HasSuffix(err.Error(), "timeout") {
-					conn.Close()
+					c.close()
 					close(text.chunk)
 					return nil
 				}
 				return c.logError(err)
 			}
-			conn.SetReadDeadline(time.Now().Add(time.Millisecond * 700))
+			c.conn.SetReadDeadline(time.Now().Add(time.Millisecond * 700))
 			switch messageType {
 			case websocket.TextMessage:
 				parameters, data, _ := getHeadersAndData(data)
@@ -329,20 +331,16 @@ func (c *Communicate) process(wg *sync.WaitGroup) {
 			if c.lastError != nil {
 				break
 			}
-			select {
-			case v, ok := <-chunk:
-				if ok {
-					if v.Type == ChunkTypeAudio {
-						t.speechData = append(t.speechData, v.Data...)
-						// } else if v.Type == ChunkTypeWordBoundary {
-					} else if v.Type == ChunkTypeEnd {
-						close(t.chunk)
-						break
-					}
+			v, ok := <-chunk
+			if ok {
+				if v.Type == ChunkTypeAudio {
+					t.speechData = append(t.speechData, v.Data...)
+					// } else if v.Type == ChunkTypeWordBoundary {
+				} else if v.Type == ChunkTypeEnd {
+					close(t.chunk)
+					c.close()
+					break
 				}
-			case <-time.After(2 * time.Second):
-				close(t.chunk)
-				break
 			}
 		}
 	}
