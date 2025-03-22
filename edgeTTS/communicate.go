@@ -105,6 +105,7 @@ func (c *Communicate) logError(err error) error {
 	if err == nil {
 		return nil
 	}
+	fmt.Printf("! catched error: %s\n", err.Error())
 	c.lastError = err
 	if err.Error() != "EOF" {
 		return nil
@@ -309,21 +310,23 @@ func (c *Communicate) process(wg *sync.WaitGroup) {
 		chunk := c.stream(t)
 		for {
 			if c.lastError != nil {
+				close(t.chunk)
 				break
 			}
 			select {
 			case v, ok := <-chunk:
-			if ok {
-				if v.Type == ChunkTypeAudio {
-					t.speechData = append(t.speechData, v.Data...)
-					// } else if v.Type == ChunkTypeWordBoundary {
-				} else if v.Type == ChunkTypeEnd {
-					close(t.chunk)
-					break
+				if ok {
+					if v.Type == ChunkTypeAudio {
+						t.speechData = append(t.speechData, v.Data...)
+						// } else if v.Type == ChunkTypeWordBoundary {
+					} else if v.Type == ChunkTypeEnd {
+						close(t.chunk)
+						break
+					}
 				}
-			}
-			case <- time.After(2*time.Second):
-			break
+			case <-time.After(2 * time.Second):
+				close(t.chunk)
+				break
 			}
 		}
 	}
