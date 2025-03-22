@@ -232,9 +232,13 @@ func (c *Communicate) stream(text *CommunicateTextTask) chan communicateChunk {
 
 		// finalUtterance := make(map[int]int)
 		for {
-			// 读取消息
+			conn.SetReadDeadline(time.Now().Add(time.Second))
 			messageType, data, err := conn.ReadMessage()
 			if err != nil {
+				if strings.HasSuffix(err.Error(), "timeout") {
+					conn.Close()
+					return nil
+				}
 				return c.logError(err)
 			}
 			conn.SetReadDeadline(time.Now().Add(time.Millisecond * 700))
