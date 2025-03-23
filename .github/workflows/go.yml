@@ -27,7 +27,24 @@ jobs:
     - name: Test
       run: |-
         go test -v ./... &&
-        go build ./main.go -o ./edge-tts-go &&
+        go build -o ./edge-tts-go ./main.go &&
         ./edge-tts-go --write-media test.mp3 -t "Checking the connection" &&
         ./edge-tts-go -l>/dev/null
-
+    - name: Upload a Build Artifact mp3
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: mp3test
+        path: *.mp3
+        if-no-files-found: error
+        retention-days: 2
+        compression-level: 8
+        overwrite: true
+    - name: Upload a Build Artifact elf
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: builded elf
+        path: ./edge-tts-go
+        if-no-files-found: error
+        retention-days: 2
+        compression-level: 8
+        overwrite: true
