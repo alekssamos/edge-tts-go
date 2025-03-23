@@ -28,9 +28,9 @@ jobs:
       run: |-
         go test -v ./... &&
         mkdir ./artifacts &&
-        go build -o ./artifacts/edge-tts-go ./main.go &&
-        ./artifacts/edge-tts-go --write-media ./artifacts/test.mp3 -t "Checking the connection" &&
-        ./edge-tts-go -l>/dev/null
+        go build -ldflags="-s -w" -o ./artifacts/edge-tts-go ./main.go &&
+        ./artifacts/edge-tts-go --write-media ./artifacts/test.mp3 -t "Checking the connection" -v "en-US-AriaNeural" &&
+        ./artifacts/edge-tts-go -l>/dev/null
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4.6.2
       with:
