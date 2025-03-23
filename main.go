@@ -17,7 +17,7 @@ func usage() {
 func main() {
 	executeAction := false
 	listVoices := pflag.BoolP("list-voices", "l", false, "lists available voices and exits")
-	locale := pflag.StringP("locale", "lc", "", "locale for voice lists ex: zh-CN, en-US")
+	locale := pflag.StringP("locale", "L", "", "locale for voice lists ex: zh-CN, en-US")
 	text := pflag.StringP("text", "t", "", "what TTS will say")
 	file := pflag.StringP("file", "f", "", "same as --text but read from file")
 	voice := pflag.StringP("voice", "v", "zh-CN-XiaoxiaoNeural", "voice for TTS")
