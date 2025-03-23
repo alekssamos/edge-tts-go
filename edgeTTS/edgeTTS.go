@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"path/filepath"
 	"reflect"
 	"sort"
@@ -34,11 +35,11 @@ func isTerminal(file *os.File) bool {
 	return terminal.IsTerminal(int(file.Fd()))
 }
 
-func PrintVoices(locale string) {
+func PrintVoices(locale string) error {
 	// Print all available voices.
 	voices, err := listVoices()
 	if err != nil {
-		return
+		return err
 	}
 	sort.Slice(voices, func(i, j int) bool {
 		return voices[i].ShortName < voices[j].ShortName
@@ -52,8 +53,9 @@ func PrintVoices(locale string) {
 		"Language":       true,
 	}
 
+	printed := false
 	for _, voice := range voices {
-		if voice.Locale != locale {
+		if locale != "" && strings.ToLower(voice.Locale) != strings.ToLower(locale) {
 			continue
 		}
 		fmt.Printf("\n")
@@ -66,8 +68,13 @@ func PrintVoices(locale string) {
 			}
 			fieldValue := reflect.ValueOf(voice).Field(i).Interface()
 			fmt.Printf("%s: %v\n", fieldName, fieldValue)
+			printed = true
 		}
 	}
+	if !printed {
+		return fmt.Errorf("No matching voice with locale %q", locale)
+	}
+	return nil
 }
 
 func NewTTS(writeMedia string) *EdgeTTS {

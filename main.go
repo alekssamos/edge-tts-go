@@ -30,7 +30,11 @@ func main() {
 	pflag.Parse()
 
 	if *listVoices {
-		edgeTTS.PrintVoices(*locale)
+		err := edgeTTS.PrintVoices(*locale)
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
 		os.Exit(0)
 	}
 	if *file != "" {
