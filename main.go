@@ -24,7 +24,7 @@ func main() {
 	volume := pflag.String("volume", "+0%", "set TTS volume")
 	pitch := pflag.String("pitch", "+0Hz", "set TTS pitch")
 	rate := pflag.String("rate", "+0%", "set TTS rate")
-	writeMedia := pflag.String("write-media", "w", "send media output to file instead of stdout")
+	writeMedia := pflag.StringP("write-media", "w", "", "send media output to file instead of stdout")
 	// proxy := pflag.String("proxy", "", "use a proxy for TTS and voice list")
 	pflag.Usage = usage
 	pflag.Parse()
