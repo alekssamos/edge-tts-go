@@ -15,15 +15,16 @@ func usage() {
 }
 
 func main() {
+	executeAction := false
 	listVoices := pflag.BoolP("list-voices", "l", false, "lists available voices and exits")
-	locale := pflag.StringP("locale", "", "", "locale for voice lists ex: zh-CN, en-US")
+	locale := pflag.StringP("locale", "lc", "", "locale for voice lists ex: zh-CN, en-US")
 	text := pflag.StringP("text", "t", "", "what TTS will say")
 	file := pflag.StringP("file", "f", "", "same as --text but read from file")
 	voice := pflag.StringP("voice", "v", "zh-CN-XiaoxiaoNeural", "voice for TTS")
 	volume := pflag.String("volume", "+0%", "set TTS volume")
 	pitch := pflag.String("pitch", "+0Hz", "set TTS pitch")
 	rate := pflag.String("rate", "+0%", "set TTS rate")
-	writeMedia := pflag.String("write-media", "", "send media output to file instead of stdout")
+	writeMedia := pflag.String("write-media", "w", "send media output to file instead of stdout")
 	// proxy := pflag.String("proxy", "", "use a proxy for TTS and voice list")
 	pflag.Usage = usage
 	pflag.Parse()
@@ -33,6 +34,7 @@ func main() {
 		os.Exit(0)
 	}
 	if *file != "" {
+		executeAction = true
 		if *file == "/dev/stdin" {
 			reader := bufio.NewReader(os.Stdin)
 			*text, _ = reader.ReadString('\n')
@@ -42,6 +44,10 @@ func main() {
 		}
 	}
 	if *text != "" {
+		executeAction = true
 		edgeTTS.NewTTS(*writeMedia).AddText(*text, *voice, *rate, *volume, *pitch).Speak()
+	}
+	if !executeAction {
+		usage()
 	}
 }
