@@ -42,14 +42,6 @@ func main() {
 		}
 	}
 	if *text != "" {
-		args := edgeTTS.Args{
-			Text:       *text,
-			Voice:      *voice,
-			Rate:       *rate,
-			Volume:     *volume,
-			Pitch:      *pitch,
-			WriteMedia: *writeMedia,
-		}
-		edgeTTS.NewTTS(args).AddText(args.Text, args.Voice, args.Rate, args.Volume, args.Pitch).Speak()
+		edgeTTS.NewTTS(*writeMedia).AddText(*text, *voice, *rate, *volume, *pitch).Speak()
 	}
 }

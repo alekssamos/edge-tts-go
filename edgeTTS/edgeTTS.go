@@ -3,7 +3,6 @@ package edgeTTS
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -16,6 +15,7 @@ type EdgeTTS struct {
 	communicator *Communicate
 	texts        []*CommunicateTextTask
 	outCome      io.WriteCloser
+	LastError    error
 }
 
 type Args struct {
@@ -70,24 +70,26 @@ func PrintVoices(locale string) {
 	}
 }
 
-func NewTTS(args Args) *EdgeTTS {
+func NewTTS(writeMedia string) *EdgeTTS {
+	args := &Args{WriteMedia: writeMedia}
 	if isTerminal(os.Stdin) && isTerminal(os.Stdout) && args.WriteMedia == "" {
 		fmt.Fprintln(os.Stderr, "Warning: TTS output will be written to the terminal. Use --write-media to write to a file.")
 		fmt.Fprintln(os.Stderr, "Press Ctrl+C to cancel the operation. Press Enter to continue.")
-		fmt.Scanln()
+		_, err := fmt.Scanln()
+		if err != nil {
+			os.Exit(1)
+		}
 	}
 	if _, err := os.Stat(args.WriteMedia); os.IsNotExist(err) {
 		err := os.MkdirAll(filepath.Dir(args.WriteMedia), 0755)
 		if err != nil {
-			log.Fatalf("Failed to create dir: %v\n", err)
-			return nil
+			return &EdgeTTS{LastError: fmt.Errorf("Failed to create dir: %w", err)}
 		}
 	}
 	tts := NewCommunicate().WithVoice(args.Voice).WithRate(args.Rate).WithVolume(args.Volume).WithPitch(args.Pitch)
 	file, err := os.OpenFile(args.WriteMedia, os.O_APPEND|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		log.Fatalf("Failed to open file: %v\n", err)
-		return nil
+		return &EdgeTTS{LastError: fmt.Errorf("Failed to open file: %w", err)}
 	}
 	tts.openWs()
 	return &EdgeTTS{
@@ -133,8 +135,8 @@ func (eTTS *EdgeTTS) Speak() error {
 	for _, text := range eTTS.texts {
 		eTTS.outCome.Write(text.speechData)
 	}
-	if eTTS.communicator.lastError == AudioWasReceivedError {
-		log.Fatalln(eTTS.communicator.lastError.Error())
+	if eTTS.LastError == nil {
+		eTTS.LastError = eTTS.communicator.lastError
 	}
 	return eTTS.communicator.lastError
 }

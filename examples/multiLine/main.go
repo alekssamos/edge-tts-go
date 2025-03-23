@@ -2,11 +2,18 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
 	"github.com/alekssamos/edge-tts-go/edgeTTS"
 )
+
+func handleError(err error) {
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+}
 
 func main() {
 	// edgeTTS.NewTTS(args).AddText(args.Text, args.Voice, args.Rate, args.Volume).Speak()
@@ -50,17 +57,17 @@ func main() {
 		`因此对于什么狗屁年中大比，什么晋升和前途，什么【初等玄气凝练术】、什么【基础剑术近身三连】，都特么一边玩蛋去吧。`,
 		"他继续默默地研究手机。",
 	}
-	args := edgeTTS.Args{
-		Voice:      "",
-		WriteMedia: "./sample.mp3",
-	}
 	start := time.Now()
-	tts := edgeTTS.NewTTS(args)
+	tts := edgeTTS.NewTTS("sample.mp3")
+	handleError(tts.LastError)
 	for _, v := range contents {
 		speaker, text := splitSpeaker(v)
 		tts.AddTextWithVoice(text, speaker)
 	}
 	tts.Speak()
+	if tts.LastError == edgeTTS.AudioWasReceivedError {
+		handleError(tts.LastError)
+	}
 	fmt.Printf("程序运行时间: %s", time.Since(start))
 }
 
