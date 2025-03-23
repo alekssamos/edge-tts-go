@@ -32,7 +32,7 @@ func main() {
 	if *listVoices {
 		err := edgeTTS.PrintVoices(*locale)
 		if err != nil {
-			fmt.Println(err.Error())
+			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 			os.Exit(1)
 		}
 		os.Exit(0)

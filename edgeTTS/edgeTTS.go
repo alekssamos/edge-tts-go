@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 	"path/filepath"
 	"reflect"
 	"sort"
+	"strings"
 
 	terminal "golang.org/x/term"
 )
@@ -94,7 +94,7 @@ func NewTTS(writeMedia string) *EdgeTTS {
 		}
 	}
 	tts := NewCommunicate().WithVoice(args.Voice).WithRate(args.Rate).WithVolume(args.Volume).WithPitch(args.Pitch)
-	file, err := os.OpenFile(args.WriteMedia, os.O_APPEND|os.O_CREATE|os.O_TRUNC, 0644)
+	file, err := os.OpenFile(args.WriteMedia, os.O_APPEND|os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
 		return &EdgeTTS{LastError: fmt.Errorf("Failed to open file: %w", err)}
 	}

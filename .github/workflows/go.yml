@@ -30,7 +30,8 @@ jobs:
         mkdir ./artifacts &&
         go build -ldflags="-s -w" -o ./artifacts/edge-tts-go ./main.go &&
         ./artifacts/edge-tts-go --write-media ./artifacts/test.mp3 -t "Checking the connection" -v "en-US-AriaNeural" &&
-        ./artifacts/edge-tts-go -l>/dev/null
+        ffmpeg -hide_banner -loglevel error -i ./artifacts/test.mp3 qwe.ogg &&
+        ./artifacts/edge-tts-go -l -L ru-RU
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4.6.2
       with:

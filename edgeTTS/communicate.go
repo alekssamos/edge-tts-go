@@ -106,7 +106,7 @@ func (c *Communicate) logError(err error) error {
 	if err == nil {
 		return nil
 	}
-	// fmt.Printf("! catched error: %s\n", err.Error())
+	// fmt.Fprintf(os.Stderr, "! catched error: %s\n", err.Error())
 	c.lastError = err
 	if err.Error() != "EOF" {
 		return nil
