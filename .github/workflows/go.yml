@@ -22,8 +22,12 @@ jobs:
         go-version: '1.24'
 
     - name: Build
-      run: go build -v ./...
+      run: go build -v
 
     - name: Test
-      run: go test -v ./... && ./edge-tts-go --write-media test.mp3 -t "Checking the connection" && ./edge-tts-go -l>/dev/null
+      run: |-
+        go test -v ./... &&
+        go build ./main.go -o ./edge-tts-go &&
+        ./edge-tts-go --write-media test.mp3 -t "Checking the connection" &&
+        ./edge-tts-go -l>/dev/null
 
