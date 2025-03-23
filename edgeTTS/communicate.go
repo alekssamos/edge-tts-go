@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"io"
 	"regexp"
 	"strings"
 	"sync"
@@ -107,10 +108,13 @@ func (c *Communicate) logError(err error) error {
 		return nil
 	}
 	// fmt.Fprintf(os.Stderr, "! catched error: %s\n", err.Error())
-	c.lastError = err
-	if err.Error() != "EOF" {
+	if err == io.EOF {
 		return nil
 	}
+	if strings.Contains(err.Error(), " use of closed network connection") {
+		return nil
+	}
+	c.lastError = err
 	return err
 }
 

@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-const Version = "1.0.4"
+const Version = "1.0.5"
 
 func VersionInfo() (int, int, int) {
 	versionInfo := strings.Split(Version, ".")
