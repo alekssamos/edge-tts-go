@@ -27,16 +27,14 @@ jobs:
     - name: Test
       run: |-
         go test -v ./... &&
-        go build -o ./edge-tts-go ./main.go &&
         mkdir ./artifacts &&
-        cp ./edge-tts-go ./artifacts/ &
-        ./edge-tts-go --write-media test.mp3 -t "Checking the connection" &&
-        cp ./test.mp3 ./artifacts/
+        go build -o ./artifacts/edge-tts-go ./main.go &&
+        ./artifacts/edge-tts-go --write-media ./artifacts/test.mp3 -t "Checking the connection" &&
         ./edge-tts-go -l>/dev/null
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4.6.2
       with:
-        name: mp3test
+        name: edge-tts-go-test-with-mp3
         path: ./artifacts
         if-no-files-found: error
         retention-days: 2
