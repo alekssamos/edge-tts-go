@@ -1,5 +1,7 @@
 # edge-tts-go
 
+[![Go](https://github.com/alekssamos/edge-tts-go/actions/workflows/go.yml/badge.svg)](https://github.com/alekssamos/edge-tts-go/actions/workflows/go.yml)
+
 `edge-tts-go` is a golang module that allows you to use Microsoft Edge's online text-to-speech service from within your golang code or using the provided `edge-tts-go` command.
 
 ## Installation

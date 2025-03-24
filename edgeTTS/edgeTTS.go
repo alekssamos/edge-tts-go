@@ -78,7 +78,13 @@ func PrintVoices(locale string) error {
 }
 
 func NewTTS(writeMedia string) *EdgeTTS {
-	args := &Args{WriteMedia: writeMedia}
+	args := &Args{
+		WriteMedia: writeMedia,
+		Voice: "zh-CN-XiaoxiaoNeural",
+		Volume: "+0%",
+		Pitch: "+0Hz",
+		Rate: "+0%",
+	}
 	if isTerminal(os.Stdin) && isTerminal(os.Stdout) && args.WriteMedia == "" {
 		fmt.Fprintln(os.Stderr, "Warning: TTS output will be written to the terminal. Use --write-media to write to a file.")
 		fmt.Fprintln(os.Stderr, "Press Ctrl+C to cancel the operation. Press Enter to continue.")

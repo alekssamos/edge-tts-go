@@ -35,6 +35,10 @@ jobs:
         ./artifacts/edge-tts-go --write-media ./artifacts/test.mp3 -t "Checking the connection" -v "en-US-AriaNeural" &&
         ffmpeg -hide_banner -loglevel error -i ./artifacts/test.mp3 qwe.ogg &&
         ./artifacts/edge-tts-go -l -L ru-RU
+    - name: More tests
+      run: |
+        cd examples/singleLine
+        go run main.go
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4.6.2
       with:
