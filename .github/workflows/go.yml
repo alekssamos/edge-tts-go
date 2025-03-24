@@ -13,6 +13,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     steps:
     - uses: actions/checkout@v3
 
@@ -25,9 +26,11 @@ jobs:
       run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
     - name: Build
+      timeout-minutes: 1
       run: go build -v
 
     - name: Test
+      timeout-minutes: 1
       run: |-
         go test -v ./... &&
         mkdir ./artifacts &&
@@ -36,6 +39,7 @@ jobs:
         ffmpeg -hide_banner -loglevel error -i ./artifacts/test.mp3 qwe.ogg &&
         ./artifacts/edge-tts-go -l -L ru-RU
     - name: More tests
+      timeout-minutes: 1
       run: |
         cd examples/singleLine
         go run main.go
