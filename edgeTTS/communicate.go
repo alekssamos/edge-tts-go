@@ -182,6 +182,9 @@ func (c *Communicate) fillOption(text *CommunicateTextOption) {
 	if text.volume == "" {
 		text.volume = c.option.volume
 	}
+	if text.pitch == "" {
+		text.pitch = c.option.pitch
+	}
 }
 
 func (c *Communicate) openWs() *websocket.Conn {

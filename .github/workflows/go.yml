@@ -43,6 +43,7 @@ jobs:
       run: |
         cd examples/singleLine
         go run main.go
+        ffmpeg -hide_banner -loglevel error -i result.mp3 voice.ogg
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4.6.2
       with:
