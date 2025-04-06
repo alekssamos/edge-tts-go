@@ -44,6 +44,11 @@ jobs:
         cd examples/singleLine
         go run main.go
         ffmpeg -hide_banner -loglevel error -i result.mp3 voice.ogg
+        cp ./result.mp3 ../../artifacts/result_singleLine.mp3
+        cd ../changeRateAndPitch
+        go run main.go
+        ffmpeg -hide_banner -loglevel error -i result.mp3 voice.ogg
+        cp ./result.mp3 ../../artifacts/result_changeRateAndPitch.mp3
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4.6.2
       with:
